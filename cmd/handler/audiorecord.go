@@ -3,20 +3,11 @@ package handler
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	"net/http"
 	"os"
 )
 
-var upgrader = websocket.Upgrader{
-	// 校验请求来源，这里不校验
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
 func AudioRecord(c *gin.Context) {
-	client, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	client, err := up.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		fmt.Println("升级websocket错误", err)
 		panic(err)
@@ -34,5 +25,4 @@ func AudioRecord(c *gin.Context) {
 			fmt.Println("语音文件存储错误", err)
 		}
 	}
-
 }

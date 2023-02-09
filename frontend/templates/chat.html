@@ -1,0 +1,395 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>ChatRobot</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-base64@3.7.5/base64.min.js"></script>
+
+    <!-- load OpusMediaRecorder.umd.js. OpusMediaRecorder will be loaded. -->
+    <script src="https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/OpusMediaRecorder.umd.js"></script>
+    <!-- load encoderWorker.umd.js. This should be after OpusMediaRecorder. -->
+    <!-- This script tag will create OpusMediaRecorder.encoderWorker. -->
+    <script src="https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/encoderWorker.umd.js"></script>
+
+
+</head>
+
+
+<style>
+    * {
+        padding: 0;
+        margin: 0;
+    }
+
+    body {
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .container {
+        height: 760px;
+        width: 900px;
+        border-radius: 4px;
+        border: 0.5px solid #e0e0e0;
+        background-color: #f5f5f5;
+        display: flex;
+        flex-flow: column;
+        overflow: hidden;
+    }
+
+    .content {
+        width: calc(100% - 40px);
+        padding: 20px;
+        overflow-y: scroll;
+        flex: 1;
+    }
+
+    .content:hover::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .bubble {
+        max-width: 400px;
+        padding: 10px;
+        border-radius: 5px;
+        position: relative;
+        color: #000;
+        word-wrap: break-word;
+        word-break: normal;
+    }
+
+    .item-left .bubble {
+        margin-left: 15px;
+        background-color: #fff;
+    }
+
+    .item-left .bubble:before {
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-top: 10px solid transparent;
+        border-right: 10px solid #fff;
+        border-bottom: 10px solid transparent;
+        left: -20px;
+    }
+
+    .item-right .bubble {
+        margin-right: 15px;
+        background-color: #9eea6a;
+    }
+
+    .item-right .bubble:before {
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 10px solid #9eea6a;
+        border-top: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+        right: -20px;
+    }
+
+    .item {
+        margin-top: 15px;
+        display: flex;
+        width: 100%;
+    }
+
+    .item.item-right {
+        justify-content: flex-end;
+    }
+
+    .item.item-center {
+        justify-content: center;
+    }
+
+    .item.item-center span {
+        font-size: 12px;
+        padding: 2px 4px;
+        color: #fff;
+        background-color: #dadada;
+        border-radius: 3px;
+        -moz-user-select: none; /*火狐*/
+        -webkit-user-select: none; /*webkit浏览器*/
+        -ms-user-select: none; /*IE10*/
+        -khtml-user-select: none; /*早期浏览器*/
+        user-select: none;
+    }
+
+    .avatar img {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+    }
+
+    .input-area {
+        border-top: 0.5px solid #e0e0e0;
+        height: 150px;
+        display: flex;
+        flex-flow: column;
+        background-color: #fff;
+    }
+
+    textarea {
+        flex: 1;
+        padding: 5px;
+        font-size: 14px;
+        border: none;
+        cursor: pointer;
+        overflow-y: auto;
+        overflow-x: hidden;
+        outline: none;
+        resize: none;
+    }
+
+    .button-area {
+        display: flex;
+        height: 40px;
+        margin-right: 10px;
+        line-height: 40px;
+        padding: 5px;
+        justify-content: flex-end;
+    }
+
+    .button-area button {
+        width: 80px;
+        border: none;
+        outline: none;
+        border-radius: 4px;
+        float: right;
+        cursor: pointer;
+        margin-right: 10px;
+    }
+
+    /* 设置滚动条的样式 */
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    /* 滚动槽 */
+    ::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset006pxrgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+    }
+
+    /* 滚动条滑块 */
+    ::-webkit-scrollbar-thumb {
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0);
+        -webkit-box-shadow: inset006pxrgba(0, 0, 0, 0.5);
+    }
+
+</style>
+
+
+<body>
+
+<div class="container">
+    <div class="content">
+        <div class="item item-center"><span>您已进入Ai聊天室</span></div>
+        <div class="item item-left" >
+            <div class="avatar"><img src="/docs/pic/AI.png"/></div>
+            <div class="bubble bubble-left">这是一条音频测试信息<br>
+            <audio id="testAudio" src="/docs/audio/SynthesizingAudio.wav" controls="controls" preload hidden></audio>
+            <button onclick="audioPlay('testAudio');">播放/暂停</button>
+            </div>
+        </div>
+
+    </div>
+    <div class="input-area">
+        <textarea name="text" id="textarea"></textarea>
+        <div class="button-area">
+            <button id="record-btn">录 音</button>
+            <button id="send-btn">发 送</button>
+        </div>
+    </div>
+</div>
+
+
+</body>
+
+
+<script>
+    //====================webSocket连接======================
+    // 创建一个webSocket连接
+    let socket = new WebSocket('ws://'+window.location.host+'/chat?uid='+getUid());
+    let connected = false
+
+    // 当webSocket连接成功的回调函数
+    socket.onopen = function () {
+        console.log("webSocket open");
+        connected = true;
+    };
+
+    // 断开webSocket连接的回调函数
+    socket.onclose = function () {
+        console.log("webSocket close");
+        connected = false;
+    };
+
+    console.log("Websocket - status: " + socket.readyState);
+
+    function audioPlay(param) {
+        let audio = document.getElementById(param);
+        if (audio.paused) {
+            audio.play();//audio.play();// 播放
+        } else {
+            audio.pause();
+        }
+    }
+
+
+    let coreData = {
+        "message_type": 0,
+        "message":"",
+        "message_id" : "",
+        "content": ""
+    };
+
+    // 发送text
+    const sendBtn = document.querySelector('#send-btn');
+    sendBtn.addEventListener('click', () => {
+        coreData.message_type = 1 //1text 2speech
+        let msg = document.querySelector('#textarea').value;
+        if (!msg) {
+            alert('请输入内容');
+            return;
+        }
+        coreData.message = msg;
+        coreData.message_id = getUid() + '_'+Number(new Date())
+        coreData.content = ""
+        socket.send(JSON.stringify(coreData))
+
+
+        // 创建发送的话？
+        let item = document.createElement('div');
+        item.className = 'item item-right';
+        item.innerHTML = `<div class="bubble bubble-left">${msg}<br>
+        <audio id=${coreData.message_id} src="/docs/audio/${coreData.message_id}.wav" controls="controls" preload hidden></audio>
+        <button onclick="audioPlay('${coreData.message_id}');">播放/暂停</button></div>
+        <div class="avatar"><img src="/docs/pic/user.jpg" /></div>`;
+        document.querySelector('.content').appendChild(item);
+        document.querySelector('#textarea').value = '';
+        document.querySelector('#textarea').focus();
+
+        //滚动条置底
+        let height = document.querySelector('.content').scrollHeight;
+        document.querySelector(".content").scrollTop = height;
+    })
+
+    // 发送speech
+    const recordBtn = document.querySelector('#record-btn');
+    let isRecording = false;
+    let mediaRecorder = null;  // 存放 MediaRecorder
+    // Replace MediaRecorder
+    window.MediaRecorder = OpusMediaRecorder;
+
+    navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
+        // 创建媒体记录
+        mediaRecorder = new MediaRecorder(stream, {mimeType: 'audio/wav'});
+        let audioData = [];  // 存储录音数据块
+        let audioBlob = [];
+        recordBtn.addEventListener('click', () => {
+            coreData.message_type = 2 //1text 2speech
+            if (!isRecording) {
+                recordBtn.innerHTML="停止录音"
+                // 开始录制
+                mediaRecorder.start();
+                // 处理音频数据
+                mediaRecorder.addEventListener('dataavailable', ev => {
+                    // 把数据块添加到数组
+                    audioData.push(ev.data);
+                });
+
+                // 录音停止
+                mediaRecorder.addEventListener('stop', () => {
+                    // 把音频数据块转换为 Blob
+                    audioBlob = new Blob(audioData, {type: 'audio/wav;codecs=opus'});
+                    coreData.message_id = getUid()+'_'+Number(new Date());
+                    coreData.message = "";
+                    var reader = new FileReader()
+                    reader.readAsDataURL(audioBlob)
+                    reader.onload = function (e) {
+                        coreData.content = this.result
+                        socket.send(JSON.stringify(coreData));
+                    }
+                    // 清空存储数据块
+                    audioData = []
+                });
+            } else {
+                recordBtn.innerHTML="开始录音"
+                mediaRecorder.stop();
+            }
+            isRecording = !isRecording;
+        })
+    }).catch(info => {
+        alert('无法获取麦克风权限！错误信息：' + info);
+    });
+
+
+
+
+    //=======================接收消息并显示===========================
+    // 接受webSocket连接中，来自服务端的消息
+    socket.onmessage = function(event) {
+        // 将服务端发送来的消息进行json解析
+        let data = JSON.parse(event.data);
+        console.log("revice:" , data);
+
+        let msgType = data.resp_type;
+        let msg = data.message;
+        let msgId = data.message_id;
+
+        // type为2表示AI回复消息
+        if (msgType === 2) {
+            let item = document.createElement('div');
+            item.className = 'item item-left';
+            item.innerHTML = `<div class="avatar"><img src="/docs/pic/AI.png" /></div><div class="bubble bubble-left">${msg}<br>
+            <audio id=${msgId} src="/docs/audio/${msgId}.wav" controls="controls" preload hidden></audio>
+            <button onclick="audioPlay('${msgId}');">播放/暂停</button>
+            </div>`;
+            document.querySelector('.content').appendChild(item);
+            document.querySelector('#textarea').value = '';
+            document.querySelector('#textarea').focus();
+            audioPlay(msgId);
+        }
+        // todo type为1表示是自己的信息被语音识别了
+        else if(msgType === 1){
+            let item = document.createElement('div');
+            item.className = 'item item-right';
+            item.innerHTML = `<div class="bubble bubble-left">${msg}<br>
+                <audio id=${msgId} src="/docs/audio/${msgId}.wav" controls="controls" preload hidden></audio>
+                <button onclick="audioPlay('${msgId}');">播放/暂停</button></div>
+                <div class="avatar"><img src="/docs/pic/user.jpg" /></div>`;
+            document.querySelector('.content').appendChild(item);
+            document.querySelector('#textarea').value = '';
+            document.querySelector('#textarea').focus();
+        }
+
+        //滚动条置底
+        let height = document.querySelector('.content').scrollHeight;
+        document.querySelector(".content").scrollTop = height;
+    }
+
+    function getUid() {
+        // window.location.href 属性返回当前页面的 URL。
+        let url = decodeURI(window.location.href); // 对获取url的url进行解码   decodeURI()函数可对encodeURI()函数编码过的 URI 进行解码。
+        let urlParam = url.split("?uid=");  // 获取url携带的参数
+        let uid= urlParam[1]  //判断参数是否存在 存在的话对对参数进行转换
+        console.log('uid',uid)
+        return uid
+    }
+
+</script>
+
+</html>
+
+
+

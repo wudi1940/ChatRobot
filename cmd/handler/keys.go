@@ -1,13 +1,16 @@
 package handler
 
 import (
+	"ChatRobot/cmd/client"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type KeysRequest struct {
-	OpenAIKey string `json:"open_ai_key,omitempty"`
-	AzureKey  string `json:"azure_key,omitempty"`
+	OpenAIKey   string `json:"open_ai_key,omitempty"`
+	AzureKey    string `json:"azure_key,omitempty"`
+	AzureRegion string `json:"azure_region"`
+	Uid         string `json:"uid"`
 }
 
 type Response struct {
@@ -26,6 +29,18 @@ func GetKeys(c *gin.Context) {
 			Data: req,
 		})
 		return
+	}
+
+	userClient := &client.UserClient{}
+	name := req.Uid
+	userClient.Uid = req.Uid
+	userClient.AzureClient = client.InitAzureClient("9e41080c590946229ec766b6d9ea6a6c", "japanwest")
+	userClient.OpenAIClient = client.InitOpenAIClient(req.OpenAIKey)
+	userClient.RespChan = make(chan *client.RespMessage, 3)
+	userClient.SendChan = make(chan *client.Message, 3)
+	// 如果用户列表中没有该用户
+	if userClients[name] == nil {
+		userClients[name] = userClient
 	}
 
 	c.JSON(http.StatusOK, Response{

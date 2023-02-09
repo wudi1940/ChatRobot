@@ -1,11 +1,11 @@
 package client
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"os"
 	"time"
+	"unicode"
 
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/audio"
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/common"
@@ -21,11 +21,12 @@ func GetAzureClient() *azureClientStruct {
 	return azureClient
 }
 
-func InitAzureClient(key, region string) {
+func InitAzureClient(key, region string) *azureClientStruct {
 	azureClient = &azureClientStruct{
 		Key:    key,
 		Region: region,
 	}
+	return azureClient
 }
 
 // 9e41080c590946229ec766b6d9ea6a6c
@@ -35,67 +36,68 @@ type azureClientStruct struct {
 	Region string
 }
 
-func (c *azureClientStruct) SpeechToTest() {
+func (c *azureClientStruct) SpeechToTextFromFile(filePath string) string {
 
 	speechKey := c.Key
 	speechRegion := c.Region
 
-	audioConfig, err := audio.NewAudioConfigFromDefaultMicrophoneInput()
+	audioConfig, err := audio.NewAudioConfigFromWavFileInput(filePath)
 	if err != nil {
 		fmt.Println("Got an error: ", err)
-		return
+		return ""
 	}
 	defer audioConfig.Close()
-	speechConfig, err := speech.NewSpeechConfigFromSubscription(speechKey, speechRegion)
+	config, err := speech.NewSpeechConfigFromSubscription(speechKey, speechRegion)
 	if err != nil {
 		fmt.Println("Got an error: ", err)
-		return
+		return ""
 	}
-	defer speechConfig.Close()
-	speechRecognizer, err := speech.NewSpeechRecognizerFromConfig(speechConfig, audioConfig)
+	defer config.Close()
+	languageConfig, err := speech.NewAutoDetectSourceLanguageConfigFromLanguages([]string{"en-US", "zh-CN"})
 	if err != nil {
 		fmt.Println("Got an error: ", err)
-		return
+		return ""
 	}
+	defer languageConfig.Close()
+	speechRecognizer, err := speech.NewSpeechRecognizerFomAutoDetectSourceLangConfig(config, languageConfig, audioConfig)
+	if err != nil {
+		fmt.Println("Got an error: ", err)
+		return ""
+	}
+
+	//speechRecognizer, err := speech.NewSpeechRecognizerFromConfig(config, audioConfig)
+	//if err != nil {
+	//	fmt.Println("Got an error: ", err)
+	//	return ""
+	//}
 	defer speechRecognizer.Close()
+	speechRecognizer.SessionStarted(func(event speech.SessionEventArgs) {
+		defer event.Close()
+		fmt.Println("Session Started (ID=", event.SessionID, ")")
+	})
+	speechRecognizer.SessionStopped(func(event speech.SessionEventArgs) {
+		defer event.Close()
+		fmt.Println("Session Stopped (ID=", event.SessionID, ")")
+	})
 
-	speechRecognizer.SessionStarted(sessionStartedHandler)
-	speechRecognizer.SessionStopped(sessionStoppedHandler)
-	speechRecognizer.Recognizing(recognizingHandler)
-	speechRecognizer.Recognized(recognizedHandler)
-	speechRecognizer.Canceled(cancelledHandler)
-	speechRecognizer.StartContinuousRecognitionAsync()
-	defer speechRecognizer.StopContinuousRecognitionAsync()
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
+	task := speechRecognizer.RecognizeOnceAsync()
+	var outcome speech.SpeechRecognitionOutcome
+	select {
+	case outcome = <-task:
+		return outcome.Result.Text
+	case <-time.After(60 * time.Second):
+		fmt.Println("Timed out")
+		return "Timed out"
+	}
+	defer outcome.Close()
+	if outcome.Error != nil {
+		fmt.Println("Got an error: ", outcome.Error)
+	}
+	fmt.Println("Got a recognition!")
+	return "error"
 }
 
-func sessionStartedHandler(event speech.SessionEventArgs) {
-	defer event.Close()
-	fmt.Println("Session Started (ID=", event.SessionID, ")")
-}
-
-func sessionStoppedHandler(event speech.SessionEventArgs) {
-	defer event.Close()
-	fmt.Println("Session Stopped (ID=", event.SessionID, ")")
-}
-
-func recognizingHandler(event speech.SpeechRecognitionEventArgs) {
-	defer event.Close()
-	fmt.Println("Recognizing:", event.Result.Text)
-}
-
-func recognizedHandler(event speech.SpeechRecognitionEventArgs) {
-	defer event.Close()
-	fmt.Println("Recognized:", event.Result.Text)
-}
-
-func cancelledHandler(event speech.SpeechRecognitionCanceledEventArgs) {
-	defer event.Close()
-	fmt.Println("Received a cancellation: ", event.ErrorDetails)
-	fmt.Println("Did you set the speech resource key and region values?")
-}
-
-func (c *azureClientStruct) TextToSpeech(text string) {
+func (c *azureClientStruct) TextToSpeech(text, filePath string) {
 	speechKey := c.Key
 	speechRegion := c.Region
 
@@ -112,7 +114,11 @@ func (c *azureClientStruct) TextToSpeech(text string) {
 	}
 	defer speechConfig.Close()
 
-	speechConfig.SetSpeechSynthesisVoiceName("en-US-JennyNeural")
+	var voiceName = "en-US-JennyNeural"
+	if IsChinese(text) {
+		voiceName = "zh-CN-YunxiNeural"
+	}
+	speechConfig.SetSpeechSynthesisVoiceName(voiceName)
 
 	speechSynthesizer, err := speech.NewSpeechSynthesizerFromConfig(speechConfig, audioConfig)
 	if err != nil {
@@ -135,6 +141,7 @@ func (c *azureClientStruct) TextToSpeech(text string) {
 	var outcome speech.SpeechSynthesisOutcome
 	select {
 	case outcome = <-task:
+
 	case <-time.After(60 * time.Second):
 		fmt.Println("Timed out")
 		return
@@ -148,7 +155,7 @@ func (c *azureClientStruct) TextToSpeech(text string) {
 	if outcome.Result.Reason == common.SynthesizingAudioCompleted {
 		fmt.Printf("Speech synthesized to speaker for text [%s].\n", text)
 
-		err = os.WriteFile("docs/audio/SynthesizingAudio.wav", outcome.Result.AudioData, 0666)
+		err = os.WriteFile(filePath, outcome.Result.AudioData, 0666)
 		if err != nil {
 			fmt.Println("语音文件存储错误", err)
 		}
@@ -184,4 +191,15 @@ func synthesizedHandler(event speech.SpeechSynthesisEventArgs) {
 func cancelledSynthesisHandler(event speech.SpeechSynthesisEventArgs) {
 	defer event.Close()
 	fmt.Println("Received a cancellation.")
+}
+
+func IsChinese(str string) bool {
+	var count int
+	for _, v := range str {
+		if unicode.Is(unicode.Han, v) {
+			count++
+			break
+		}
+	}
+	return count > 0
 }

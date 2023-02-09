@@ -19,6 +19,7 @@
 
 <script>
     let ws = null;
+    ws = new WebSocket("ws://127.0.0.1:8080/websocket");
 
     let isRecording = false;
     let mediaRecorder = null;  // 存放 MediaRecorder
@@ -52,7 +53,6 @@
                 recordBtn.innerHTML="开始录音"
                 mediaRecorder.stop();
 
-                ws = new WebSocket("ws://127.0.0.1:8080/websocket");
                 ws.onopen = function () {
                     ws.send(audioData)
                 }
