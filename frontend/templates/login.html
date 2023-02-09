@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <title>ChatRobot</title>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="https://cdn.jsdelivr.net/npm/uikit@3.6.18/dist/css/uikit.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.6.18/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.6.18/dist/js/uikit-icons.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+<div class="uk-margin-auto uk-margin-auto-vertical uk-text-center uk-position-center">
+    <div class="uk-margin-auto uk-margin-auto-vertical uk-card uk-card-large uk-card-body">
+        <form action="" class="uk-margin uk-margin-auto">
+            <fieldset class="uk-fieldset">
+                <legend class="uk-legend">输入key</legend>
+                <hr class="uk-divider-icon">
+                <div class="uk-margin">
+                    <div class="uk-inline">
+                        <span class="uk-form-icon" uk-icon="icon: user"></span>
+                        <input class="uk-input uk-form-width-large" id="open_ai" placeholder="YOUR OPENAI KEY"
+                               type="text">
+                    </div>
+                </div>
+
+                <hr class="uk-divider-icon">
+                <div class="uk-margin">
+                    <div class="uk-inline">
+                        <span class="uk-form-icon" uk-icon="icon: user"></span>
+                        <input class="uk-input uk-form-width-large" id="azure" placeholder="YOUR ARUZE KEY" type="text">
+                    </div>
+                </div>
+                <div class="uk-margin">
+                    <div class="uk-inline">
+                        <span class="uk-form-icon" uk-icon="icon: user"></span>
+                        <input class="uk-input uk-form-width-large" id="azure_region" placeholder="YOUR ARUZE REGION"
+                               type="text">
+                    </div>
+                </div>
+
+                <div class="uk-margin uk-alert-success" hidden id="login-success" uk-alert>
+                    <a class="uk-alert-close" uk-close></a>
+                    <p>输入成功</p>
+                </div>
+                <ul id="info">
+
+                </ul>
+                <div class="uk-margin uk-alert-danger" hidden id="login-failure" uk-alert>
+                    <a class="uk-alert-close" uk-close></a>
+                    <p>输入失败</p>
+                </div>
+                <div class="uk-margin">
+                    <div class="uk-inline">
+                        <button class="uk-button uk-form-width-large uk-button-primary" id="login"
+                                onclick="return false;">确认
+                        </button>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
+</body>
+
+<script>
+    // function check() {
+    //     $.ajax({
+    //         url: "http://localhost/user/info",
+    //         method: "GET",
+    //         contentType: "application/json",
+    //         success: function(result, status, xhr) {
+    //             var resJson = xhr.responseJSON;
+    //             if(resJson != null && resJson.code == 1) {
+    //                 window.location.href="/home.html";
+    //                 return;
+    //             }
+    //         },
+    //         error: function(xhr, status, error) {
+    //             UIkit.notification({message: 'Service not valid...'});
+    //             return;
+    //         }
+    //     });
+    // };
+    // check();    // init
+
+    $("#login").click(function () {
+        var data = {
+            "open_ai_key": $("#open_ai").val().replace(/(^\s*)|(\s*$)/g, ""),
+            "azure_key": $("#azure").val().replace(/(^\s*)|(\s*$)/g, ""),
+            "azure_region": $("#azure_region").val().replace(/(^\s*)|(\s*$)/g, ""),
+        };
+        console.log(data)
+        if (data.open_ai_key.length == 0 || data.azure_key.length == 0 || data.azure_region.length == 0) {
+            $("#info").empty();
+            var loginNot = $('<div class="uk-margin uk-alert-warning" uk-alert><a class="uk-alert-close" uk-close></a><p>All params can not be none</p></div>');
+            $("#info").append(loginNot);
+            return;
+        }
+        $.ajax({
+            url: "/keys",
+            method: "POST",
+            data: JSON.stringify(data),
+            dataType: "json",
+            contentType: "application/json",
+            success: function (result, status, xhr) {
+                var resJson = xhr.responseJSON;
+                if (resJson != null) {
+                    if (resJson.code == 1 && resJson.data != null) {  // success
+                        var loginSuccess = $('<div class="uk-margin uk-alert-success" uk-alert><a class="uk-alert-close" uk-close></a><p> Sign ' + resJson.data.nickname + ', Welcome Home.</p></div>');
+                        $("#info").empty();
+                        $("#info").append(loginSuccess);
+                        setTimeout(function () {
+                            window.location.href = "/home.html";
+                        }, 1200);
+                        return;
+                    }
+                    var msg = "";
+                    if (resJson.code == 3) {// user not exist
+                        msg = "username not exist."
+                    } else if (resJson.code == 2) {// password is wrong
+                        msg = "password is wrong."
+                    }
+                    var loginFailure = $('<div class="uk-margin uk-alert-danger" uk-alert><a class="uk-alert-close" uk-close></a><p>' + msg + '</p></div>');
+                    $("#info").empty();
+                    $("#info").append(loginFailure);
+                }
+            },
+            error: function (xhr, status, error) {
+                var resJson = xhr.responseJSON;
+                var msg = resJson != null && resJson.msg != '' ? resJson.msg : "Bad Request";
+                var loginFailure = $('<div class="uk-margin uk-alert-danger" uk-alert><a class="uk-alert-close" uk-close></a><p>' + msg + '</p></div>');
+                $("#info").empty();
+                $("#info").append(loginFailure);
+            },
+            complete: function (xhr, status) {
+                //
+            }
+        });
+    });
+</script>
+</html>

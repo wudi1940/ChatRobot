@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+
+<button type="button" id="record-btn">点击开始说话</button>
+
+<button type="button" id="play-btn">播放录音</button>
+<button type="button" id="export-btn">导出录音</button>
+
+</body>
+
+
+<script>
+    let ws = null;
+
+    let isRecording = false;
+    let mediaRecorder = null;  // 存放 MediaRecorder
+    let audioData = [];  // 存储录音数据块
+    const recordBtn = document.querySelector('#record-btn');
+
+
+    navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
+        // 创建媒体记录
+        mediaRecorder = new MediaRecorder(stream, {mimeType: 'audio/webm'});
+
+        recordBtn.addEventListener('click', () => {
+            if (!isRecording) {
+                recordBtn.innerHTML="停止录音"
+                // 开始录制
+                mediaRecorder.start();
+
+                // 处理音频数据
+                audioData = []
+                mediaRecorder.addEventListener('dataavailable', ev => {
+                    // 把数据块添加到数组
+                    audioData.push(ev.data);
+                });
+
+                // 录音停止
+                mediaRecorder.addEventListener('stop', () => {
+                    // 把音频数据块转换为 Blob
+                    audioData = new Blob(audioData);
+                });
+            } else {
+                recordBtn.innerHTML="开始录音"
+                mediaRecorder.stop();
+
+                ws = new WebSocket("ws://127.0.0.1:8080/websocket");
+                ws.onopen = function () {
+                    ws.send(audioData)
+                }
+            }
+            isRecording = !isRecording;
+        })
+    }).catch(info => {
+        alert('无法获取麦克风权限！错误信息：' + info);
+    });
+
+    const playBtn = document.querySelector('#play-btn');  // 播放录音按钮
+    const exportBtn = document.querySelector('#export-btn');  // 导出录音按钮
+
+
+    // 播放录音按钮点击
+    playBtn.addEventListener('click', () => {
+        if (audioData === null) return false;
+        // 创建一个 URL 资源对象给 Audio 读取
+        const audio = new Audio(URL.createObjectURL(audioData));
+        // 播放音频
+        audio.play();
+    });
+
+    // 导出录音按钮点击
+    exportBtn.addEventListener('click', () => {
+        // 创建一个链接
+        const link = document.createElement('a');
+        // 把音频数据转换为 URL 资源对象传给链接的 href
+        link.href = URL.createObjectURL(audioData);
+        // 设置下载时的文件名，后缀是 webm
+        link.download = 'audio.wav';
+        // 点击链接
+        link.click();
+    });
+
+</script>
+
+
+</html>
