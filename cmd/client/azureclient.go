@@ -1,6 +1,7 @@
 package client
 
 import (
+	"ChatRobot/cmd/config"
 	"bufio"
 	"errors"
 	"fmt"
@@ -148,7 +149,7 @@ func (c *azureClientStruct) TextToSpeech(text string) {
 	if outcome.Result.Reason == common.SynthesizingAudioCompleted {
 		fmt.Printf("Speech synthesized to speaker for text [%s].\n", text)
 
-		err = os.WriteFile("docs/audio/SynthesizingAudio.wav", outcome.Result.AudioData, 0666)
+		err = os.WriteFile(config.ProjectPath+"/docs/audio/SynthesizingAudio.wav", outcome.Result.AudioData, 0666)
 		if err != nil {
 			fmt.Println("语音文件存储错误", err)
 		}
