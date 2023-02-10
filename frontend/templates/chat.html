@@ -242,7 +242,7 @@
         "message_type": 0,
         "message":"",
         "message_id" : "",
-        "content": []
+        "content": ""
     };
 
     // 发送text
@@ -255,8 +255,8 @@
             return;
         }
         coreData.message = msg;
-        coreData.message_id = window.location.hostname+'_'+Number(new Date())
-        coreData.content = []
+        coreData.message_id = getUid() + '_'+Number(new Date())
+        coreData.content = ""
         socket.send(JSON.stringify(coreData))
 
 
@@ -265,7 +265,7 @@
         item.className = 'item item-right';
         item.innerHTML = `<div class="bubble bubble-left">${msg}<br>
         <audio id=${coreData.message_id} src="/docs/audio/SynthesizingAudio.wav" controls="controls" preload hidden></audio>
-        <button onclick="audioPlay(coreData.message_id);">播放/暂停</button></div>
+        <button onclick="audioPlay('${coreData.message_id}');">播放/暂停</button></div>
         <div class="avatar"><img src="/docs/pic/user.jpg" /></div>`;
         document.querySelector('.content').appendChild(item);
         document.querySelector('#textarea').value = '';
@@ -343,13 +343,13 @@
             item.className = 'item item-left';
             item.innerHTML = `<div class="avatar"><img src="/docs/pic/AI.png" /></div><div class="bubble bubble-left">${msg}<br>
             <audio id=${msgId} src="/docs/audio/SynthesizingAudio.wav" controls="controls" preload hidden></audio>
-            <button onclick="audioPlay(msgId);">播放/暂停</button>
+            <button onclick="audioPlay(${msgId});">播放/暂停</button>
             </div>`;
             document.querySelector('.content').appendChild(item);
             document.querySelector('#textarea').value = '';
             document.querySelector('#textarea').focus();
         }
-        // type为1表示是自己的信息被语音识别了
+        // todo type为1表示是自己的信息被语音识别了
         else {
 
         }
@@ -359,6 +359,14 @@
         document.querySelector(".content").scrollTop = height;
     }
 
+    function getUid() {
+        // window.location.href 属性返回当前页面的 URL。
+        let url = decodeURI(window.location.href); // 对获取url的url进行解码   decodeURI()函数可对encodeURI()函数编码过的 URI 进行解码。
+        let urlParam = url.split("?uid=");  // 获取url携带的参数
+        let uid= urlParam[1]  //判断参数是否存在 存在的话对对参数进行转换
+        console.log('uid',uid)
+        return uid
+    }
 
 </script>
 

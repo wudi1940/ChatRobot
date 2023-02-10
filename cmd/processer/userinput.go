@@ -5,15 +5,22 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 func TextInput(user *client.UserClient, msg *client.ChatMessage) {
 
+	// todo: askAi
+
+	// rpMsg := user.OpenAIClient.AskAI(msg.Message)
+	msgId := user.Uid + "_" + strconv.FormatInt(time.Now().UnixMicro(), 10)
+
 	respMsg := &client.RespMessage{
 		RespType:  2,
 		Message:   "这个是自动回复," + msg.Message,
-		MessageId: "",
+		MessageId: msgId,
 	}
 
 	user.RespChan <- respMsg

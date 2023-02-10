@@ -3,12 +3,12 @@ package client
 import "github.com/gorilla/websocket"
 
 type UserClient struct {
-	Conn        *websocket.Conn // 用户websocket连接
-	Name        string          // 用户名称
-	AzureClient *azureClientStruct
-	// OpenAIClient
-	SendChan chan *Message
-	RespChan chan *RespMessage
+	Conn         *websocket.Conn // 用户websocket连接
+	Uid          string          // 用户名称
+	AzureClient  *azureClientStruct
+	OpenAIClient *openAIClientStruct
+	SendChan     chan *Message
+	RespChan     chan *RespMessage
 }
 
 type ChatMessage struct {

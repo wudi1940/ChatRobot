@@ -10,6 +10,7 @@ type KeysRequest struct {
 	OpenAIKey   string `json:"open_ai_key,omitempty"`
 	AzureKey    string `json:"azure_key,omitempty"`
 	AzureRegion string `json:"azure_region"`
+	Uid         string `json:"uid"`
 }
 
 type Response struct {
@@ -32,8 +33,9 @@ func GetKeys(c *gin.Context) {
 
 	userClient := &client.UserClient{}
 	name := c.ClientIP()
-	userClient.Name = name
+	userClient.Uid = req.Uid
 	userClient.AzureClient = client.InitAzureClient(req.AzureKey, req.AzureRegion)
+	userClient.OpenAIClient = client.InitOpenAIClient(req.OpenAIKey)
 	userClient.RespChan = make(chan *client.RespMessage, 3)
 	userClient.SendChan = make(chan *client.Message, 3)
 	// 如果用户列表中没有该用户

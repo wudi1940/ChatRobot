@@ -14,5 +14,6 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/sashabaranov/go-gpt3 v1.0.0
 	golang.org/x/sys v0.5.0 // indirect
 )
