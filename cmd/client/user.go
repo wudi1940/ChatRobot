@@ -15,7 +15,7 @@ type ChatMessage struct {
 	MessageType int32  `json:"message_type,omitempty"` // 1表示text 2表示语音
 	Message     string `json:"message,omitempty"`
 	MessageId   string `json:"message_id,omitempty"`
-	Content     []byte `json:"content,omitempty"`
+	Content     string `json:"content,omitempty"`
 }
 
 type RespMessage struct {

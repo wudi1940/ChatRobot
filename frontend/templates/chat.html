@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>ChatRobot</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-base64@3.7.5/base64.min.js"></script>
 </head>
 
 
@@ -185,11 +186,11 @@
 <div class="container">
     <div class="content">
         <div class="item item-center"><span>您已进入Ai聊天室</span></div>
-        <div class="item item-left">
+        <div class="item item-left" >
             <div class="avatar"><img src="/docs/pic/AI.png"/></div>
             <div class="bubble bubble-left">这是一条音频测试信息<br>
             <audio id="testAudio" src="/docs/audio/SynthesizingAudio.wav" controls="controls" preload hidden></audio>
-            <button onclick="audioPlay();">播放/暂停</button>
+            <button onclick="audioPlay('testAudio');">播放/暂停</button>
             </div>
         </div>
 
@@ -197,7 +198,7 @@
     <div class="input-area">
         <textarea name="text" id="textarea"></textarea>
         <div class="button-area">
-            <button id="record-btn" onclick="send()">录 音</button>
+            <button id="record-btn">录 音</button>
             <button id="send-btn">发 送</button>
         </div>
     </div>
@@ -227,8 +228,8 @@
 
     console.log("Websocket - status: " + socket.readyState);
 
-    function audioPlay() {
-        let audio = document.getElementById('testAudio');
+    function audioPlay(param) {
+        let audio = document.getElementById(param);
         if (audio.paused) {
             audio.play();//audio.play();// 播放
         } else {
@@ -244,16 +245,18 @@
         "content": []
     };
 
+    // 发送text
     const sendBtn = document.querySelector('#send-btn');
     sendBtn.addEventListener('click', () => {
-
-        coreData.message_type = 1
+        coreData.message_type = 1 //1text 2speech
         let msg = document.querySelector('#textarea').value;
         if (!msg) {
             alert('请输入内容');
             return;
         }
         coreData.message = msg;
+        coreData.message_id = window.location.hostname+'_'+Number(new Date())
+        coreData.content = []
         socket.send(JSON.stringify(coreData))
 
 
@@ -261,8 +264,8 @@
         let item = document.createElement('div');
         item.className = 'item item-right';
         item.innerHTML = `<div class="bubble bubble-left">${msg}<br>
-        <audio src="/docs/audio/SynthesizingAudio.wav" controls="controls" preload hidden></audio>
-        <button onclick="audioPlay();">播放/暂停</button></div>
+        <audio id=${coreData.message_id} src="/docs/audio/SynthesizingAudio.wav" controls="controls" preload hidden></audio>
+        <button onclick="audioPlay(coreData.message_id);">播放/暂停</button></div>
         <div class="avatar"><img src="/docs/pic/user.jpg" /></div>`;
         document.querySelector('.content').appendChild(item);
         document.querySelector('#textarea').value = '';
@@ -272,6 +275,55 @@
         let height = document.querySelector('.content').scrollHeight;
         document.querySelector(".content").scrollTop = height;
     })
+
+    // 发送speech
+    const recordBtn = document.querySelector('#record-btn');
+    let isRecording = false;
+    let mediaRecorder = null;  // 存放 MediaRecorder
+
+    navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
+        // 创建媒体记录
+        mediaRecorder = new MediaRecorder(stream, {mimeType: 'audio/webm'});
+        let audioData = [];  // 存储录音数据块
+        let audioBlob = [];
+        recordBtn.addEventListener('click', () => {
+            coreData.message_type = 2 //1text 2speech
+            if (!isRecording) {
+                recordBtn.innerHTML="停止录音"
+                // 开始录制
+                mediaRecorder.start();
+                // 处理音频数据
+                mediaRecorder.addEventListener('dataavailable', ev => {
+                    // 把数据块添加到数组
+                    audioData.push(ev.data);
+                });
+
+                // 录音停止
+                mediaRecorder.addEventListener('stop', () => {
+                    // 把音频数据块转换为 Blob
+                    audioBlob = new Blob(audioData, {type: 'audio/webm'});
+                    coreData.message_id = window.location.hostname+'_'+Number(new Date());
+                    coreData.message = "";
+                    var reader = new FileReader()
+                    reader.readAsDataURL(audioBlob)
+                    reader.onload = function (e) {
+                        coreData.content = this.result
+                        socket.send(JSON.stringify(coreData));
+                    }
+                    // 清空存储数据块
+                    audioData = []
+                });
+            } else {
+                recordBtn.innerHTML="开始录音"
+                mediaRecorder.stop();
+            }
+            isRecording = !isRecording;
+        })
+    }).catch(info => {
+        alert('无法获取麦克风权限！错误信息：' + info);
+    });
+
+
 
 
     //=======================接收消息并显示===========================
@@ -285,21 +337,19 @@
         let msg = data.message;
         let msgId = data.message_id;
 
-        // type为2表示有人发消息
+        // type为2表示AI回复消息
         if (msgType === 2) {
             let item = document.createElement('div');
             item.className = 'item item-left';
             item.innerHTML = `<div class="avatar"><img src="/docs/pic/AI.png" /></div><div class="bubble bubble-left">${msg}<br>
-            <audio src="/docs/audio/SynthesizingAudio.wav" controls="controls" preload hidden></audio>
-            <button onclick="audioPlay();">播放/暂停</button>
+            <audio id=${msgId} src="/docs/audio/SynthesizingAudio.wav" controls="controls" preload hidden></audio>
+            <button onclick="audioPlay(msgId);">播放/暂停</button>
             </div>`;
             document.querySelector('.content').appendChild(item);
             document.querySelector('#textarea').value = '';
             document.querySelector('#textarea').focus();
-
-
         }
-        // type为1或2表示有人加入或退出
+        // type为1表示是自己的信息被语音识别了
         else {
 
         }

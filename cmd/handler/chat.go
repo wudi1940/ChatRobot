@@ -66,6 +66,7 @@ func Chat(c *gin.Context) {
 		case 2:
 			// todo 语音识别
 			// 文本发送
+			processer.SpeechInput(userClient, data)
 		default:
 			fmt.Println("消息类型错误")
 		}
