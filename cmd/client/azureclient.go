@@ -5,12 +5,11 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"os"
-	"time"
-
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/audio"
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/common"
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/speech"
+	"os"
+	"time"
 )
 
 var azureClient *azureClientStruct
@@ -22,11 +21,12 @@ func GetAzureClient() *azureClientStruct {
 	return azureClient
 }
 
-func InitAzureClient(key, region string) {
+func InitAzureClient(key, region string) *azureClientStruct {
 	azureClient = &azureClientStruct{
 		Key:    key,
 		Region: region,
 	}
+	return azureClient
 }
 
 // 9e41080c590946229ec766b6d9ea6a6c
