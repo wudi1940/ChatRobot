@@ -30,7 +30,7 @@ func Chat(c *gin.Context) {
 	defer conn.Close()
 
 	// 如果用户列表中没有该用户
-	name := c.ClientIP()
+	name, _ := c.GetQuery("uid")
 	if userClients[name] == nil {
 		fmt.Println("未找到连接")
 		return
@@ -58,14 +58,12 @@ func Chat(c *gin.Context) {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println(data)
+		// fmt.Println(data)
 
 		switch data.MessageType {
 		case 1:
 			processer.TextInput(userClient, data)
 		case 2:
-			// todo 语音识别
-			// 文本发送
 			processer.SpeechInput(userClient, data)
 		default:
 			fmt.Println("消息类型错误")

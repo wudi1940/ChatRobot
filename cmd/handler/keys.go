@@ -32,7 +32,7 @@ func GetKeys(c *gin.Context) {
 	}
 
 	userClient := &client.UserClient{}
-	name := c.ClientIP()
+	name := req.Uid
 	userClient.Uid = req.Uid
 	userClient.AzureClient = client.InitAzureClient(req.AzureKey, req.AzureRegion)
 	userClient.OpenAIClient = client.InitOpenAIClient(req.OpenAIKey)

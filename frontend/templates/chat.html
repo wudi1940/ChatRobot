@@ -211,7 +211,7 @@
 <script>
     //====================webSocket连接======================
     // 创建一个webSocket连接
-    let socket = new WebSocket('ws://'+window.location.host+'/chat');
+    let socket = new WebSocket('ws://'+window.location.host+'/chat?uid='+getUid());
     let connected = false
 
     // 当webSocket连接成功的回调函数
@@ -264,7 +264,7 @@
         let item = document.createElement('div');
         item.className = 'item item-right';
         item.innerHTML = `<div class="bubble bubble-left">${msg}<br>
-        <audio id=${coreData.message_id} src="/docs/audio/SynthesizingAudio.wav" controls="controls" preload hidden></audio>
+        <audio id=${coreData.message_id} src="/docs/audio/${coreData.message_id}.wav" controls="controls" preload hidden></audio>
         <button onclick="audioPlay('${coreData.message_id}');">播放/暂停</button></div>
         <div class="avatar"><img src="/docs/pic/user.jpg" /></div>`;
         document.querySelector('.content').appendChild(item);
@@ -302,7 +302,7 @@
                 mediaRecorder.addEventListener('stop', () => {
                     // 把音频数据块转换为 Blob
                     audioBlob = new Blob(audioData, {type: 'audio/webm'});
-                    coreData.message_id = window.location.hostname+'_'+Number(new Date());
+                    coreData.message_id = getUid()+'_'+Number(new Date());
                     coreData.message = "";
                     var reader = new FileReader()
                     reader.readAsDataURL(audioBlob)
@@ -342,16 +342,25 @@
             let item = document.createElement('div');
             item.className = 'item item-left';
             item.innerHTML = `<div class="avatar"><img src="/docs/pic/AI.png" /></div><div class="bubble bubble-left">${msg}<br>
-            <audio id=${msgId} src="/docs/audio/SynthesizingAudio.wav" controls="controls" preload hidden></audio>
-            <button onclick="audioPlay(${msgId});">播放/暂停</button>
+            <audio id=${msgId} src="/docs/audio/${msgId}.wav" controls="controls" preload hidden></audio>
+            <button onclick="audioPlay('${msgId}');">播放/暂停</button>
             </div>`;
             document.querySelector('.content').appendChild(item);
             document.querySelector('#textarea').value = '';
             document.querySelector('#textarea').focus();
+            audioPlay(msgId);
         }
         // todo type为1表示是自己的信息被语音识别了
-        else {
-
+        else if(msgType === 1){
+            let item = document.createElement('div');
+            item.className = 'item item-right';
+            item.innerHTML = `<div class="bubble bubble-left">${msg}<br>
+                <audio id=${msgId} src="/docs/audio/${msgId}.wav" controls="controls" preload hidden></audio>
+                <button onclick="audioPlay('${msgId}');">播放/暂停</button></div>
+                <div class="avatar"><img src="/docs/pic/user.jpg" /></div>`;
+            document.querySelector('.content').appendChild(item);
+            document.querySelector('#textarea').value = '';
+            document.querySelector('#textarea').focus();
         }
 
         //滚动条置底
