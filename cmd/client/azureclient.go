@@ -29,8 +29,6 @@ func InitAzureClient(key, region string) *azureClientStruct {
 	return azureClient
 }
 
-// 9e41080c590946229ec766b6d9ea6a6c
-// japanwest
 type azureClientStruct struct {
 	Key    string
 	Region string
