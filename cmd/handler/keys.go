@@ -2,6 +2,7 @@ package handler
 
 import (
 	"ChatRobot/cmd/client"
+	"ChatRobot/cmd/config"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -34,8 +35,12 @@ func GetKeys(c *gin.Context) {
 	userClient := &client.UserClient{}
 	name := req.Uid
 	userClient.Uid = req.Uid
-	userClient.AzureClient = client.InitAzureClient("9e41080c590946229ec766b6d9ea6a6c", "japanwest")
-	userClient.OpenAIClient = client.InitOpenAIClient(req.OpenAIKey)
+	userClient.AzureClient = client.InitAzureClient(config.AzureClientKey, config.AzureClientRegion) // fixme 替换
+	if req.OpenAIKey == "" {
+		userClient.OpenAIClient = client.InitOpenAIClient(config.OpenAIClientKey)
+	} else {
+		userClient.OpenAIClient = client.InitOpenAIClient(req.OpenAIKey)
+	}
 	userClient.RespChan = make(chan *client.RespMessage, 3)
 	userClient.SendChan = make(chan *client.Message, 3)
 	// 如果用户列表中没有该用户

@@ -6,8 +6,8 @@
 程序使用了微软认知服务的SpeechToText以及TextToSpeech对语音和文字进行相互转换，该ApiKey已经写入到服务中不需要填写
 调用OpenApi服务仍需要输入ApiKey
 
-针对没有ApiKey的用户提供一个试用key
-`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`
+针对没有ApiKey的用户提供一个试用key, 使用key已集成到服务中，
+若没有自己的key在输入页面直接 输入空值即可
 当余额使用完之后该key失效，请各位仅限试用，让更多的人有机会体验
 
 
