@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"unicode"
 
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/audio"
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/common"
@@ -52,11 +53,23 @@ func (c *azureClientStruct) SpeechToTextFromFile(filePath string) string {
 		return ""
 	}
 	defer config.Close()
-	speechRecognizer, err := speech.NewSpeechRecognizerFromConfig(config, audioConfig)
+	languageConfig, err := speech.NewAutoDetectSourceLanguageConfigFromLanguages([]string{"en-US", "zh-CN"})
 	if err != nil {
 		fmt.Println("Got an error: ", err)
 		return ""
 	}
+	defer languageConfig.Close()
+	speechRecognizer, err := speech.NewSpeechRecognizerFomAutoDetectSourceLangConfig(config, languageConfig, audioConfig)
+	if err != nil {
+		fmt.Println("Got an error: ", err)
+		return ""
+	}
+
+	//speechRecognizer, err := speech.NewSpeechRecognizerFromConfig(config, audioConfig)
+	//if err != nil {
+	//	fmt.Println("Got an error: ", err)
+	//	return ""
+	//}
 	defer speechRecognizer.Close()
 	speechRecognizer.SessionStarted(func(event speech.SessionEventArgs) {
 		defer event.Close()
@@ -71,16 +84,17 @@ func (c *azureClientStruct) SpeechToTextFromFile(filePath string) string {
 	var outcome speech.SpeechRecognitionOutcome
 	select {
 	case outcome = <-task:
-	case <-time.After(5 * time.Second):
+		return outcome.Result.Text
+	case <-time.After(60 * time.Second):
 		fmt.Println("Timed out")
-		return ""
+		return "Timed out"
 	}
 	defer outcome.Close()
 	if outcome.Error != nil {
 		fmt.Println("Got an error: ", outcome.Error)
 	}
 	fmt.Println("Got a recognition!")
-	return outcome.Result.Text
+	return "error"
 }
 
 func (c *azureClientStruct) TextToSpeech(text, filePath string) {
@@ -100,8 +114,11 @@ func (c *azureClientStruct) TextToSpeech(text, filePath string) {
 	}
 	defer speechConfig.Close()
 
-	speechConfig.SetSpeechSynthesisVoiceName("en-US-JennyNeural")
-	//speechConfig.SetSpeechSynthesisVoiceName("zh-CN-YunxiNeural")
+	var voiceName = "en-US-JennyNeural"
+	if IsChinese(text) {
+		voiceName = "zh-CN-YunxiNeural"
+	}
+	speechConfig.SetSpeechSynthesisVoiceName(voiceName)
 
 	speechSynthesizer, err := speech.NewSpeechSynthesizerFromConfig(speechConfig, audioConfig)
 	if err != nil {
@@ -124,6 +141,7 @@ func (c *azureClientStruct) TextToSpeech(text, filePath string) {
 	var outcome speech.SpeechSynthesisOutcome
 	select {
 	case outcome = <-task:
+
 	case <-time.After(60 * time.Second):
 		fmt.Println("Timed out")
 		return
@@ -173,4 +191,15 @@ func synthesizedHandler(event speech.SpeechSynthesisEventArgs) {
 func cancelledSynthesisHandler(event speech.SpeechSynthesisEventArgs) {
 	defer event.Close()
 	fmt.Println("Received a cancellation.")
+}
+
+func IsChinese(str string) bool {
+	var count int
+	for _, v := range str {
+		if unicode.Is(unicode.Han, v) {
+			count++
+			break
+		}
+	}
+	return count > 0
 }

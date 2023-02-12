@@ -2,6 +2,7 @@ package processer
 
 import (
 	"ChatRobot/cmd/client"
+	"ChatRobot/cmd/config"
 	"encoding/base64"
 	"fmt"
 	"os"
@@ -14,12 +15,12 @@ func TextInput(user *client.UserClient, msg *client.ChatMessage) {
 
 	// todo: askAi
 
-	// rpMsg := user.OpenAIClient.AskAI(msg.Message)
+	rpMsg := user.OpenAIClient.AskAI(msg.Message)
 	msgId := user.Uid + "_" + strconv.FormatInt(time.Now().UnixMicro(), 10)
 
 	respMsg := &client.RespMessage{
 		RespType:  2,
-		Message:   "这个是自动回复," + msg.Message,
+		Message:   rpMsg,
 		MessageId: msgId,
 	}
 
@@ -35,7 +36,7 @@ func SpeechInput(user *client.UserClient, msg *client.ChatMessage) {
 		return
 	}
 
-	fileName := "docs/audio/" + msg.MessageId + ".wav"
+	fileName := config.ProjectPath + "/docs/audio/" + msg.MessageId + ".wav"
 	err = os.WriteFile(fileName, decodeString, 0666)
 	if err != nil {
 		fmt.Println("语音文件存储错误", err)
@@ -43,22 +44,26 @@ func SpeechInput(user *client.UserClient, msg *client.ChatMessage) {
 	}
 
 	// todo 语音识别
-	//rpMsg := user.AzureClient.SpeechToTextFromFile(fileName)
+	rpMsg := user.AzureClient.SpeechToTextFromFile(fileName)
+
 	respMsg := &client.RespMessage{
 		RespType:  1,
-		Message:   "这是一个伪造的语音识别",
+		Message:   rpMsg,
 		MessageId: msg.MessageId,
 	}
 	// 文本发送
 	user.RespChan <- respMsg
 
 	// todo 询问ai并输出
-	//aiMsg := user.OpenAIClient.AskAI(msg.Message)
+	aiMsg := user.OpenAIClient.AskAI(rpMsg)
+	// ai 语音识别
 	msgId := user.Uid + "_" + strconv.FormatInt(time.Now().UnixMicro(), 10)
+	filePath := config.ProjectPath + "/docs/audio/" + msgId + ".wav"
+	user.AzureClient.TextToSpeech(aiMsg, filePath)
 
 	respAIMsg := &client.RespMessage{
 		RespType:  2,
-		Message:   "这个是伪造的AI回复," + msg.Message,
+		Message:   aiMsg,
 		MessageId: msgId,
 	}
 

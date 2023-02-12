@@ -26,21 +26,6 @@
                     </div>
                 </div>
 
-                <hr class="uk-divider-icon">
-                <div class="uk-margin">
-                    <div class="uk-inline">
-                        <span class="uk-form-icon" uk-icon="icon: user"></span>
-                        <input class="uk-input uk-form-width-large" id="azure" placeholder="YOUR ARUZE KEY" type="text">
-                    </div>
-                </div>
-                <div class="uk-margin">
-                    <div class="uk-inline">
-                        <span class="uk-form-icon" uk-icon="icon: user"></span>
-                        <input class="uk-input uk-form-width-large" id="azure_region" placeholder="YOUR ARUZE REGION"
-                               type="text">
-                    </div>
-                </div>
-
                 <div class="uk-margin uk-alert-success" hidden id="login-success" uk-alert>
                     <a class="uk-alert-close" uk-close></a>
                     <p>输入成功</p>
@@ -89,12 +74,10 @@
     $("#login").click(function () {
         var data = {
             "open_ai_key": $("#open_ai").val().replace(/(^\s*)|(\s*$)/g, ""),
-            "azure_key": $("#azure").val().replace(/(^\s*)|(\s*$)/g, ""),
-            "azure_region": $("#azure_region").val().replace(/(^\s*)|(\s*$)/g, ""),
             "uid": uuid()
         };
         console.log(data)
-        if (data.open_ai_key.length == 0 || data.azure_key.length == 0 || data.azure_region.length == 0) {
+        if (data.open_ai_key.length == 0) {
             $("#info").empty();
             var loginNot = $('<div class="uk-margin uk-alert-warning" uk-alert><a class="uk-alert-close" uk-close></a><p>All params can not be none</p></div>');
             $("#info").append(loginNot);

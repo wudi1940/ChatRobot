@@ -33,9 +33,14 @@ func (r *openAIClientStruct) AskAI(prompt string) string {
 	ctx := context.Background()
 
 	req := gogpt.CompletionRequest{
-		Model:     gogpt.GPT3TextDavinci003,
-		MaxTokens: 5,
-		Prompt:    prompt,
+		Model:            gogpt.GPT3TextDavinci003,
+		MaxTokens:        1024,
+		Prompt:           prompt,
+		Temperature:      1,
+		TopP:             1,
+		FrequencyPenalty: 1,
+		PresencePenalty:  0.1,
+		Stop:             []string{"ME:", "YOU:"},
 	}
 	resp, err := c.CreateCompletion(ctx, req)
 	if err != nil {

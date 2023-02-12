@@ -34,7 +34,7 @@ func GetKeys(c *gin.Context) {
 	userClient := &client.UserClient{}
 	name := req.Uid
 	userClient.Uid = req.Uid
-	userClient.AzureClient = client.InitAzureClient(req.AzureKey, req.AzureRegion)
+	userClient.AzureClient = client.InitAzureClient("9e41080c590946229ec766b6d9ea6a6c", "japanwest")
 	userClient.OpenAIClient = client.InitOpenAIClient(req.OpenAIKey)
 	userClient.RespChan = make(chan *client.RespMessage, 3)
 	userClient.SendChan = make(chan *client.Message, 3)

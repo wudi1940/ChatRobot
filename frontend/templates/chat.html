@@ -5,6 +5,14 @@
     <title>ChatRobot</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-base64@3.7.5/base64.min.js"></script>
+
+    <!-- load OpusMediaRecorder.umd.js. OpusMediaRecorder will be loaded. -->
+    <script src="https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/OpusMediaRecorder.umd.js"></script>
+    <!-- load encoderWorker.umd.js. This should be after OpusMediaRecorder. -->
+    <!-- This script tag will create OpusMediaRecorder.encoderWorker. -->
+    <script src="https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/encoderWorker.umd.js"></script>
+
+
 </head>
 
 
@@ -280,10 +288,12 @@
     const recordBtn = document.querySelector('#record-btn');
     let isRecording = false;
     let mediaRecorder = null;  // 存放 MediaRecorder
+    // Replace MediaRecorder
+    window.MediaRecorder = OpusMediaRecorder;
 
     navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
         // 创建媒体记录
-        mediaRecorder = new MediaRecorder(stream, {mimeType: 'audio/webm'});
+        mediaRecorder = new MediaRecorder(stream, {mimeType: 'audio/wav'});
         let audioData = [];  // 存储录音数据块
         let audioBlob = [];
         recordBtn.addEventListener('click', () => {
@@ -301,7 +311,7 @@
                 // 录音停止
                 mediaRecorder.addEventListener('stop', () => {
                     // 把音频数据块转换为 Blob
-                    audioBlob = new Blob(audioData, {type: 'audio/webm'});
+                    audioBlob = new Blob(audioData, {type: 'audio/wav;codecs=opus'});
                     coreData.message_id = getUid()+'_'+Number(new Date());
                     coreData.message = "";
                     var reader = new FileReader()
