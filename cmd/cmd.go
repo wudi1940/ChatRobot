@@ -22,17 +22,6 @@ func main() {
 
 	r.POST("/keys", handler.GetKeys)
 
-	r.GET("/chat", handler.Chat) //r.POST("/chat", handler.Core)
-
-	//r.GET("/websocket", handler.AudioRecord)
-
+	r.GET("/chat", handler.Chat)
 	r.Run(":9999") // listen and serve on 0.0.0.0:8080
-
-	//i := &processer.AudioInput{}
-	//i.Record()
-
-	//v1 := r.Group("v1")
-	//{
-	//	v1.POST("/input/text", handler.InputText)
-	//}
 }
