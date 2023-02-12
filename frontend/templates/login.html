@@ -79,9 +79,8 @@
         console.log(data)
         if (data.open_ai_key.length == 0) {
             $("#info").empty();
-            var loginNot = $('<div class="uk-margin uk-alert-warning" uk-alert><a class="uk-alert-close" uk-close></a><p>All params can not be none</p></div>');
+            var loginNot = $('<div class="uk-margin uk-alert-warning" uk-alert><a class="uk-alert-close" uk-close></a><p>OpenAIKey = none， will use default key</p></div>');
             $("#info").append(loginNot);
-            return;
         }
         $.ajax({
             url: "/keys",
