@@ -22,4 +22,5 @@ enabled 并填入要授信的域名
 
 如果本代码对你有帮助，请多多star
 
-![](docs/pic/goodjob.jpg)
+<img src="docs/pic/goodjob.jpg" alt="goodjob" width="200" height="200" align="bottom" />
+
