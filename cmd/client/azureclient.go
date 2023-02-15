@@ -34,33 +34,29 @@ type azureClientStruct struct {
 	Region string
 }
 
-func (c *azureClientStruct) SpeechToTextFromFile(filePath string) string {
+func (c *azureClientStruct) SpeechToTextFromFile(filePath string) (string, error) {
 
 	speechKey := c.Key
 	speechRegion := c.Region
 
 	audioConfig, err := audio.NewAudioConfigFromWavFileInput(filePath)
 	if err != nil {
-		fmt.Println("Got an error: ", err)
-		return ""
+		return "", err
 	}
 	defer audioConfig.Close()
 	config, err := speech.NewSpeechConfigFromSubscription(speechKey, speechRegion)
 	if err != nil {
-		fmt.Println("Got an error: ", err)
-		return ""
+		return "", err
 	}
 	defer config.Close()
 	languageConfig, err := speech.NewAutoDetectSourceLanguageConfigFromLanguages([]string{"en-US", "zh-CN"})
 	if err != nil {
-		fmt.Println("Got an error: ", err)
-		return ""
+		return "", err
 	}
 	defer languageConfig.Close()
 	speechRecognizer, err := speech.NewSpeechRecognizerFomAutoDetectSourceLangConfig(config, languageConfig, audioConfig)
 	if err != nil {
-		fmt.Println("Got an error: ", err)
-		return ""
+		return "", err
 	}
 
 	//speechRecognizer, err := speech.NewSpeechRecognizerFromConfig(config, audioConfig)
@@ -82,33 +78,30 @@ func (c *azureClientStruct) SpeechToTextFromFile(filePath string) string {
 	var outcome speech.SpeechRecognitionOutcome
 	select {
 	case outcome = <-task:
-		return outcome.Result.Text
+
 	case <-time.After(60 * time.Second):
 		fmt.Println("Timed out")
-		return "Timed out"
+		return "", errors.New("time out")
 	}
 	defer outcome.Close()
 	if outcome.Error != nil {
-		fmt.Println("Got an error: ", outcome.Error)
+		return "", outcome.Error
 	}
-	fmt.Println("Got a recognition!")
-	return "error"
+	return outcome.Result.Text, nil
 }
 
-func (c *azureClientStruct) TextToSpeech(text, filePath string) {
+func (c *azureClientStruct) TextToSpeech(text, filePath string) error {
 	speechKey := c.Key
 	speechRegion := c.Region
 
 	audioConfig, err := audio.NewAudioConfigFromDefaultSpeakerOutput()
 	if err != nil {
-		fmt.Println("Got an error: ", err)
-		return
+		return err
 	}
 	defer audioConfig.Close()
 	speechConfig, err := speech.NewSpeechConfigFromSubscription(speechKey, speechRegion)
 	if err != nil {
-		fmt.Println("Got an error: ", err)
-		return
+		return err
 	}
 	defer speechConfig.Close()
 
@@ -120,8 +113,7 @@ func (c *azureClientStruct) TextToSpeech(text, filePath string) {
 
 	speechSynthesizer, err := speech.NewSpeechSynthesizerFromConfig(speechConfig, audioConfig)
 	if err != nil {
-		fmt.Println("Got an error: ", err)
-		return
+		return err
 	}
 	defer speechSynthesizer.Close()
 
@@ -132,7 +124,7 @@ func (c *azureClientStruct) TextToSpeech(text, filePath string) {
 
 	//
 	if len(text) == 0 {
-		return
+		return errors.New("text len=0")
 	}
 
 	task := speechSynthesizer.SpeakTextAsync(text)
@@ -142,33 +134,31 @@ func (c *azureClientStruct) TextToSpeech(text, filePath string) {
 
 	case <-time.After(60 * time.Second):
 		fmt.Println("Timed out")
-		return
+		return errors.New("time out")
 	}
 	defer outcome.Close()
 	if outcome.Error != nil {
-		fmt.Println("Got an error: ", outcome.Error)
-		return
+		return outcome.Error
 	}
 
 	if outcome.Result.Reason == common.SynthesizingAudioCompleted {
 		fmt.Printf("Speech synthesized to speaker for text [%s].\n", text)
-
 		err = os.WriteFile(filePath, outcome.Result.AudioData, 0666)
 		if err != nil {
-			fmt.Println("语音文件存储错误", err)
+			return err
 		}
-
 	} else {
 		cancellation, _ := speech.NewCancellationDetailsFromSpeechSynthesisResult(outcome.Result)
 		fmt.Printf("CANCELED: Reason=%d.\n", cancellation.Reason)
-
 		if cancellation.Reason == common.Error {
 			fmt.Printf("CANCELED: ErrorCode=%d\nCANCELED: ErrorDetails=[%s]\nCANCELED: Did you set the speech resource key and region values?\n",
 				cancellation.ErrorCode,
 				cancellation.ErrorDetails)
 		}
+		return errors.New(cancellation.ErrorDetails)
 	}
 
+	return nil
 }
 
 func synthesizeStartedHandler(event speech.SpeechSynthesisEventArgs) {

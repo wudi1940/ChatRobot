@@ -1,8 +1,10 @@
 package main
 
 import (
+	"ChatRobot/cmd/client"
 	"ChatRobot/cmd/handler"
 	"net/http"
+	"sync"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -10,7 +12,10 @@ import (
 
 func main() {
 
+	Init()
+
 	r := gin.Default()
+	r.Use(client.LoggerToFile())
 
 	r.LoadHTMLGlob("frontend/templates/*")
 	r.Use(static.ServeRoot("/", "frontend/templates"))
@@ -24,4 +29,10 @@ func main() {
 
 	r.GET("/chat", handler.Chat)
 	r.Run(":9999") // listen and serve on 0.0.0.0:8080
+}
+
+func Init() {
+	var once sync.Once
+
+	once.Do(client.InitLogClient)
 }

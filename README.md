@@ -13,10 +13,22 @@
 
 # 使用注意事项
 
-由于没有域名也没有ssl，某些浏览器调用浏览器的录音组件需要给该地址加浏览器白名单，否则会无法运行
+由于没有使用ssl协议，浏览器调用媒体组件需要给该地址加浏览器白名单，否则会导致网页无法正常运行
+
 可以用以下方法加白名单
+
 地址栏输入chrome://flags/, 搜索unsafely
+
 enabled 并填入要授信的域名
+
+其他浏览器可参考：http://events.jianshu.io/p/58a0d4421313
+
+# 使用方法
+
+1. ChatGPT调教指南：https://www.w3cschool.cn/openai_doc/openai_doc-vw723r6a.html
+    - 你可以根据调教指南中的语句设置机器人对话场景
+2. 
+
 
 # 支持
 

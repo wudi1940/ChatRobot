@@ -219,7 +219,7 @@
 <script>
     //====================webSocket连接======================
     // 创建一个webSocket连接
-    let socket = new WebSocket('ws://'+window.location.host+'/chat?uid='+getUid());
+    let socket = new WebSocket('wss://'+window.location.host+'/chat?uid='+getUid());
     let connected = false
 
     // 当webSocket连接成功的回调函数
@@ -231,8 +231,15 @@
     // 断开webSocket连接的回调函数
     socket.onclose = function () {
         console.log("webSocket close");
+        alert("webSocket connect close! ws链接已关闭请回输入key界面重试");
         connected = false;
     };
+
+    socket.onerror = function () {
+        console.log("webSocket connect err");
+        alert("webSocket connect err! 请重试");
+        location.href="/"
+    }
 
     console.log("Websocket - status: " + socket.readyState);
 
@@ -294,6 +301,9 @@
     navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
         // 创建媒体记录
         mediaRecorder = new MediaRecorder(stream, {mimeType: 'audio/wav'});
+        mediaRecorder.addEventListener('error', ()=> {
+            alert("mediaRecorder 出错")
+        })
         let audioData = [];  // 存储录音数据块
         let audioBlob = [];
         recordBtn.addEventListener('click', () => {
@@ -341,7 +351,7 @@
     socket.onmessage = function(event) {
         // 将服务端发送来的消息进行json解析
         let data = JSON.parse(event.data);
-        console.log("revice:" , data);
+        console.log("revise:" , data);
 
         let msgType = data.resp_type;
         let msg = data.message;
@@ -360,7 +370,7 @@
             document.querySelector('#textarea').focus();
             audioPlay(msgId);
         }
-        // todo type为1表示是自己的信息被语音识别了
+        // type为1表示是自己的信息被语音识别了
         else if(msgType === 1){
             let item = document.createElement('div');
             item.className = 'item item-right';
@@ -371,6 +381,10 @@
             document.querySelector('.content').appendChild(item);
             document.querySelector('#textarea').value = '';
             document.querySelector('#textarea').focus();
+        }
+        // type为3表示异常
+        else if(msgType === 3){
+            alert("服务出错，请稍后再试; errMsg="+msg)
         }
 
         //滚动条置底
