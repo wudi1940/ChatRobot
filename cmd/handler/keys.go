@@ -3,8 +3,9 @@ package handler
 import (
 	"ChatRobot/cmd/client"
 	"ChatRobot/cmd/config"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type KeysRequest struct {
@@ -44,9 +45,7 @@ func GetKeys(c *gin.Context) {
 	userClient.RespChan = make(chan *client.RespMessage, 3)
 	userClient.SendChan = make(chan *client.Message, 3)
 	// 如果用户列表中没有该用户
-	if userClients[name] == nil {
-		userClients[name] = userClient
-	}
+	userClients.LoadOrStore(name, userClient)
 
 	c.JSON(http.StatusOK, Response{
 		Code: 1,

@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"errors"
+
 	gogpt "github.com/sashabaranov/go-gpt3"
 )
 

@@ -4,12 +4,13 @@ import (
 	"ChatRobot/cmd/client"
 	"ChatRobot/cmd/processer"
 	"net/http"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
-var userClients = make(map[string]*client.UserClient) // 用户组映射
+var userClients sync.Map // 用户组映射
 
 var up = &websocket.Upgrader{
 	// 校验请求来源，这里不校验
@@ -30,18 +31,19 @@ func Chat(c *gin.Context) {
 
 	// 如果用户列表中没有该用户
 	name, _ := c.GetQuery("uid")
-	if userClients[name] == nil {
+	user, ok := userClients.Load(name)
+	if !ok {
 		logger.Error("用户列表中没有该用户")
 		return
 	}
-	userClient := userClients[name]
+	userClient := user.(*client.UserClient)
 	userClient.Conn = conn
 	go processer.AIOutput(userClient)
 	processer.UserIutput(userClient)
 
 	// 当函数返回时，将该用户加入退出通道，并断开用户连接
 	defer func() {
-		userClients[name] = nil
+		userClients.Delete(name)
 		userClient.Conn.Close()
 	}()
 
