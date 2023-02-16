@@ -47,7 +47,7 @@ func textInput(user *client.UserClient, msg *client.ChatMessage) {
 	logger := client.GetLogClient()
 
 	var respMsg = &client.RespMessage{}
-	msgId := user.Uid + "_" + strconv.FormatInt(time.Now().UnixMicro(), 10)
+	msgId := user.Uid + "_" + strconv.FormatInt(time.Now().UnixMilli(), 10)
 	respMsg.MessageId = msgId
 	respMsg.RespType = client.RespType_Err
 	logger.WithField("uid", user.Uid).WithField("msgId", msgId)
@@ -56,6 +56,15 @@ func textInput(user *client.UserClient, msg *client.ChatMessage) {
 	if err != nil {
 		logger.WithError(err).Error("ai回复错误")
 		respMsg.Message = "ai回复错误"
+		user.RespChan <- respMsg
+		return
+	}
+
+	filePath := config.ProjectPath + "/docs/audio/" + msgId + ".wav"
+	err = user.AzureClient.TextToSpeech(rpMsg, filePath)
+	if err != nil {
+		logger.WithError(err).Error("text to speech err")
+		respMsg.Message = "speech to text err" + err.Error()
 		user.RespChan <- respMsg
 		return
 	}
@@ -118,15 +127,21 @@ func speechInput(user *client.UserClient, msg *client.ChatMessage) {
 	}
 
 	// ai语音合成：text转语音
-	msgId := user.Uid + "_" + strconv.FormatInt(time.Now().UnixMicro(), 10)
+	var respAIMsg = &client.RespMessage{}
+	msgId := user.Uid + "_" + strconv.FormatInt(time.Now().UnixMilli(), 10)
+	respAIMsg.RespType = client.RespType_Err
+	respAIMsg.MessageId = msgId
 	filePath := config.ProjectPath + "/docs/audio/" + msgId + ".wav"
-	user.AzureClient.TextToSpeech(aiMsg, filePath)
-
-	respAIMsg := &client.RespMessage{
-		RespType:  client.RespType_Ai,
-		Message:   "aiMsg",
-		MessageId: msgId,
+	err = user.AzureClient.TextToSpeech(aiMsg, filePath)
+	if err != nil {
+		logger.WithError(err).Error("text to speech err")
+		respMsg.Message = "speech to text err" + err.Error()
+		user.RespChan <- respMsg
+		return
 	}
+
+	respAIMsg.RespType = client.RespType_Ai
+	respAIMsg.Message = aiMsg
 
 	user.RespChan <- respAIMsg
 }

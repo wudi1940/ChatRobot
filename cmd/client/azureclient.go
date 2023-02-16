@@ -126,6 +126,7 @@ func (c *azureClientStruct) TextToSpeech(text, filePath string) error {
 	if len(text) == 0 {
 		return errors.New("text len=0")
 	}
+	logClient.Info(text)
 
 	task := speechSynthesizer.SpeakTextAsync(text)
 	var outcome speech.SpeechSynthesisOutcome
