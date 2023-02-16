@@ -1,5 +1,5 @@
 <!doctype html>
-<html xmlns="http://www.w3.org/1999/html">
+<html xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
     <title>ChatRobot</title>
@@ -28,6 +28,41 @@
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+
+    .scenccontainer {
+        height: 760px;
+        width: 180px;
+        border-radius: 4px;
+        border: 0.5px solid #e0e0e0;
+        background-color: #f5f5f5;
+        display: flex;
+        flex-flow: column;
+        overflow: hidden;
+    }
+
+    .scenccontent {
+        height: 100px;
+        width: 180px;
+        border-radius: 4px;
+        border: 0.5px solid #e0e0e0;
+        background-color: #f5f5f5;
+        display: flex;
+        flex-flow: column;
+        overflow: hidden;
+        text-align:center;
+    }
+
+    .scenctext {
+        position: absolute;
+        top: -200px;
+    }
+
+    .scenccontent button {
+        width: 80px;
+        margin: auto;
+        text-align:center;
+        vertical-align: middle;
     }
 
     .container {
@@ -191,6 +226,16 @@
 
 <body>
 
+<div class="scenccontainer">
+    说明：请根据你的需求选择场景，并根据需要替换输入框的文字
+    <div class="scenccontent">
+        面试场景</br>
+        <textarea name="scenctext" class="scenctext"  id="itv-text"> 我想让你担任Android开发工程师面试官。我将成为候选人，您将向我询问Android开发工程师职位的面试问题。我希望你只作为面试官回答。不要一次写出所有的问题。我希望你只对我进行采访。问我问题，等待我的回答。不要写解释。像面试官一样一个一个问我，等我回答。我的第一句话是“你好” </textarea>
+        <button  id="itv-btn">选择</button>
+    </div>
+
+</div>
+
 <div class="container">
     <div class="content">
         <div class="item item-center"><span>您已进入Ai聊天室</span></div>
@@ -217,6 +262,13 @@
 
 
 <script>
+
+    //复制按钮事件绑定
+    $("#itv-btn").on("click",function(){
+        let text = document.getElementById("itv-text").value
+        document.getElementById("textarea").value=text
+    })
+
     //====================webSocket连接======================
     // 创建一个webSocket连接
     let socket = new WebSocket('wss://'+window.location.host+'/chat?uid='+getUid());
