@@ -45,6 +45,7 @@ func UserIutput(user *client.UserClient) {
 
 func textInput(user *client.UserClient, msg *client.ChatMessage) {
 	logger := client.GetLogClient()
+	logger.Info(msg)
 
 	var respMsg = &client.RespMessage{}
 	msgId := user.Uid + "_" + strconv.FormatInt(time.Now().UnixMilli(), 10)
@@ -61,7 +62,7 @@ func textInput(user *client.UserClient, msg *client.ChatMessage) {
 	}
 
 	filePath := config.ProjectPath + "/docs/audio/" + msgId + ".wav"
-	err = user.AzureClient.TextToSpeech(rpMsg, filePath)
+	err = user.AzureClient.TextToSpeech(rpMsg, filePath, msg.LanguageSelection)
 	if err != nil {
 		logger.WithError(err).Error("text to speech err")
 		respMsg.Message = "speech to text err" + err.Error()
@@ -103,7 +104,7 @@ func speechInput(user *client.UserClient, msg *client.ChatMessage) {
 	}
 
 	// 语音识别
-	rpMsg, err := user.AzureClient.SpeechToTextFromFile(fileName)
+	rpMsg, err := user.AzureClient.SpeechToTextFromFile(fileName, msg.LanguageSelection)
 	if err != nil {
 		logger.WithError(err).Error("speech to text err")
 		respMsg.RespType = client.RespType_Err
@@ -115,6 +116,8 @@ func speechInput(user *client.UserClient, msg *client.ChatMessage) {
 	respMsg.Message = rpMsg
 	// 语音转文本回显
 	user.RespChan <- respMsg
+
+	logger.Info(respMsg)
 
 	// 询问ai并输出
 	aiMsg, err := user.OpenAIClient.AskAI(rpMsg)
@@ -132,7 +135,7 @@ func speechInput(user *client.UserClient, msg *client.ChatMessage) {
 	respAIMsg.RespType = client.RespType_Err
 	respAIMsg.MessageId = msgId
 	filePath := config.ProjectPath + "/docs/audio/" + msgId + ".wav"
-	err = user.AzureClient.TextToSpeech(aiMsg, filePath)
+	err = user.AzureClient.TextToSpeech(aiMsg, filePath, msg.LanguageSelection)
 	if err != nil {
 		logger.WithError(err).Error("text to speech err")
 		respMsg.Message = "speech to text err" + err.Error()

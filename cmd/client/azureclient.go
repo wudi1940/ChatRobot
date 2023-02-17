@@ -1,8 +1,10 @@
 package client
 
 import (
+	"ChatRobot/cmd/config"
 	"errors"
 	"fmt"
+	"github.com/chrisport/go-lang-detector/langdet/langdetdef"
 	"os"
 	"time"
 	"unicode"
@@ -34,7 +36,7 @@ type azureClientStruct struct {
 	Region string
 }
 
-func (c *azureClientStruct) SpeechToTextFromFile(filePath string) (string, error) {
+func (c *azureClientStruct) SpeechToTextFromFile(filePath, languageSelection string) (string, error) {
 
 	speechKey := c.Key
 	speechRegion := c.Region
@@ -44,17 +46,17 @@ func (c *azureClientStruct) SpeechToTextFromFile(filePath string) (string, error
 		return "", err
 	}
 	defer audioConfig.Close()
-	config, err := speech.NewSpeechConfigFromSubscription(speechKey, speechRegion)
+	speechConfig, err := speech.NewSpeechConfigFromSubscription(speechKey, speechRegion)
 	if err != nil {
 		return "", err
 	}
-	defer config.Close()
-	languageConfig, err := speech.NewAutoDetectSourceLanguageConfigFromLanguages([]string{"en-US", "zh-CN"})
+	defer speechConfig.Close()
+	languageConfig, err := speech.NewAutoDetectSourceLanguageConfigFromLanguages(config.GetLanguageSelection()[languageSelection])
 	if err != nil {
 		return "", err
 	}
 	defer languageConfig.Close()
-	speechRecognizer, err := speech.NewSpeechRecognizerFomAutoDetectSourceLangConfig(config, languageConfig, audioConfig)
+	speechRecognizer, err := speech.NewSpeechRecognizerFomAutoDetectSourceLangConfig(speechConfig, languageConfig, audioConfig)
 	if err != nil {
 		return "", err
 	}
@@ -90,7 +92,7 @@ func (c *azureClientStruct) SpeechToTextFromFile(filePath string) (string, error
 	return outcome.Result.Text, nil
 }
 
-func (c *azureClientStruct) TextToSpeech(text, filePath string) error {
+func (c *azureClientStruct) TextToSpeech(text, filePath, languageSelection string) error {
 	speechKey := c.Key
 	speechRegion := c.Region
 
@@ -106,10 +108,20 @@ func (c *azureClientStruct) TextToSpeech(text, filePath string) error {
 	defer speechConfig.Close()
 
 	var voiceName = "en-US-JennyNeural"
-	if IsChinese(text) {
-		voiceName = "zh-CN-YunxiNeural"
+	if languageSelection == "0" {
+		voiceName = "en-US-JennyNeural"
+		if IsChinese(text) {
+			voiceName = "zh-CN-YunxiNeural"
+		}
+	} else {
+		detectLanguage := DetectLanguage(text)
+		voiceName = config.GetLanguageSpeaker()[detectLanguage]
 	}
-	speechConfig.SetSpeechSynthesisVoiceName(voiceName)
+
+	err = speechConfig.SetSpeechSynthesisVoiceName(voiceName)
+	if err != nil {
+		return err
+	}
 
 	speechSynthesizer, err := speech.NewSpeechSynthesizerFromConfig(speechConfig, audioConfig)
 	if err != nil {
@@ -191,4 +203,14 @@ func IsChinese(str string) bool {
 		}
 	}
 	return count > 0
+}
+
+func DetectLanguage(text string) string {
+	// detector with default languages
+	detector := langdetdef.NewWithDefaultLanguages()
+
+	// add selectively
+	detector.AddLanguageComparators(langdetdef.ENGLISH, langdetdef.GERMAN, langdetdef.FRENCH)
+
+	return detector.GetClosestLanguage(text)
 }

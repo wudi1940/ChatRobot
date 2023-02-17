@@ -22,6 +22,58 @@
         margin: 0;
     }
 
+    .select_box {
+        width: 200px;
+        height: 36px;
+        border: 1px solid #3CF;
+        position: relative;
+        float: left;
+        margin-right: 50px;
+    }
+
+    .select_box span {
+        display: inline-block;
+        width: 200px;
+        height: 36px;
+        line-height: 36px;
+        cursor: pointer;
+        text-indent: 10px;
+    }
+
+    .select_box .span_aa {
+        color: #C36;
+    }
+
+    .select_box ul {
+        width: 200px;
+        position: absolute;
+        top: 36px;
+        left: -1px;
+        border: 1px solid #3CF;
+        display: none;
+        background: #fff;
+    }
+
+    .select_box li {
+        cursor: pointer;
+        line-height: 36px;
+        text-indent: 10px;
+    }
+
+    .select_box li:hover {
+        background: #39F;
+        color: #fff;
+    }
+
+    .select_box font {
+        position: absolute;
+        right: 10px;
+        font-size: 26px;
+        font-family: "微软雅黑";
+        color: #3CF;
+        transform: rotate(90deg);
+    }
+
     body {
         height: 100vh;
         width: 100%;
@@ -73,7 +125,7 @@
         background-color: #f5f5f5;
         display: flex;
         flex-flow: column;
-        overflow: hidden;
+        overflow: visible;
     }
 
     .content {
@@ -233,12 +285,18 @@
         <textarea name="scenctext" class="scenctext"  id="itv-text"> 我想让你担任Android开发工程师面试官。我将成为候选人，您将向我询问Android开发工程师职位的面试问题。我希望你只作为面试官回答。不要一次写出所有的问题。我希望你只对我进行采访。问我问题，等待我的回答。不要写解释。像面试官一样一个一个问我，等我回答。我的第一句话是“你好” </textarea>
         <button  id="itv-btn">选择</button>
     </div>
+    <div class="scenccontent">
+        翻译场景</br>
+        <textarea name="scenctext" class="scenctext"  id="tas-text"> 我想让你担任英语翻译。我希望你只作为翻译将我的每一句话翻译成英文。我说一句你翻译一句，我的第一句话是"知己知彼，百战不殆" </textarea>
+        <button  id="tas-btn">选择</button>
+    </div>
 
 </div>
 
 <div class="container">
     <div class="content">
         <div class="item item-center"><span>您已进入Ai聊天室</span></div>
+        <div class="item item-center"><span>请在左侧选择合适的场景或者创建你自己的场景</span></div>
         <div class="item item-left" >
             <div class="avatar"><img src="/docs/pic/AI.png"/></div>
             <div class="bubble bubble-left">这是一条音频测试信息<br>
@@ -251,6 +309,14 @@
     <div class="input-area">
         <textarea name="text" id="textarea"></textarea>
         <div class="button-area">
+            <select name="department" id="language" class="select_box">
+                <option value= "0">语言选项（默认中英）</option>
+                <option value= "1">中文</option>
+                <option value= "2">英语</option>
+                <option value= "3">法语</option>
+                <option value= "4">德语</option>
+                <option value= "5">西班牙语</option>
+            </select>
             <button id="record-btn">录 音</button>
             <button id="send-btn">发 送</button>
         </div>
@@ -263,9 +329,36 @@
 
 <script>
 
+    $(function () {
+        var s_title = $(".select_box span");
+        var s_select = $(".select_box li");
+        s_title.click(function (e) {
+            $(this).addClass("span_aa");
+            $(this).next("ul").show();
+            e.stopPropagation();
+        });
+
+        s_select.click(function () {
+            var s_text = $(this).html();
+            var s_title_2 = $(this).parent('ul').prev("span");
+            s_title_2.html(s_text).removeClass("span_aa");
+            $(this).parent('ul').hide();
+        });
+
+        $(document).click(function () {
+            s_title.removeClass("span_aa");
+            $(".select_box ul").hide();
+        });
+    });
+
+    //====================场景选择======================
     //复制按钮事件绑定
     $("#itv-btn").on("click",function(){
         let text = document.getElementById("itv-text").value
+        document.getElementById("textarea").value=text
+    })
+    $("#tas-btn").on("click",function(){
+        let text = document.getElementById("tas-text").value
         document.getElementById("textarea").value=text
     })
 
@@ -309,13 +402,16 @@
         "message_type": 0,
         "message":"",
         "message_id" : "",
-        "content": ""
+        "content": "",
+        "language": "",
     };
 
+    //====================发送消息======================
     // 发送text
     const sendBtn = document.querySelector('#send-btn');
     sendBtn.addEventListener('click', () => {
         coreData.message_type = 1 //1text 2speech
+        coreData.language = $("#language option:selected").val()
         let msg = document.querySelector('#textarea').value;
         if (!msg) {
             alert('请输入内容');

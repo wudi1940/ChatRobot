@@ -27,7 +27,7 @@ enabled 并填入要授信的域名
 
 1. ChatGPT调教指南：https://www.w3cschool.cn/openai_doc/openai_doc-vw723r6a.html
     - 你可以根据调教指南中的语句设置机器人对话场景
-2. 
+2. Azure语言模型可参考：https://learn.microsoft.com/zh-cn/azure/cognitive-services/speech-service/language-support?tabs=tts
 
 
 # 支持
