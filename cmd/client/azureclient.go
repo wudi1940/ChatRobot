@@ -4,7 +4,6 @@ import (
 	"ChatRobot/cmd/config"
 	"errors"
 	"fmt"
-	"github.com/chrisport/go-lang-detector/langdet/langdetdef"
 	"os"
 	"time"
 	"unicode"
@@ -12,6 +11,8 @@ import (
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/audio"
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/common"
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/speech"
+	"github.com/chrisport/go-lang-detector/langdet"
+	"github.com/chrisport/go-lang-detector/langdet/langdetdef"
 )
 
 var azureClient *azureClientStruct
@@ -207,7 +208,7 @@ func IsChinese(str string) bool {
 
 func DetectLanguage(text string) string {
 	// detector with default languages
-	detector := langdetdef.NewWithDefaultLanguages()
+	detector := langdet.NewDetector()
 
 	// add selectively
 	detector.AddLanguageComparators(langdetdef.ENGLISH, langdetdef.GERMAN, langdetdef.FRENCH)

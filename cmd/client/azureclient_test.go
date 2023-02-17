@@ -29,6 +29,6 @@ func TestIsChinese(t *testing.T) {
 }
 
 func TestDetectLanguage(t *testing.T) {
-	language := DetectLanguage("这是啥")
+	language := DetectLanguage("what is this")
 	fmt.Println(language)
 }

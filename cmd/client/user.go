@@ -16,7 +16,7 @@ type ChatMessage struct {
 	Message           string `json:"message,omitempty"`
 	MessageId         string `json:"message_id,omitempty"`
 	Content           string `json:"content,omitempty"`
-	LanguageSelection string `json:"language_selection"`
+	LanguageSelection string `json:"language"`
 }
 
 const (

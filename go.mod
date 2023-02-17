@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/Microsoft/cognitive-services-speech-sdk-go v1.25.0
+	github.com/chrisport/go-lang-detector v0.0.0-20201227125515-a4270979d85f
 	github.com/gin-gonic/gin v1.8.2
 	github.com/gorilla/websocket v1.5.0
 )
@@ -29,7 +30,6 @@ require (
 )
 
 require (
-	github.com/chrisport/go-lang-detector v0.0.0-20201227125515-a4270979d85f
 	github.com/gin-contrib/static v0.0.1
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/jonboulle/clockwork v0.3.0 // indirect

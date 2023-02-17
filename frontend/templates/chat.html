@@ -273,6 +273,48 @@
         -webkit-box-shadow: inset006pxrgba(0, 0, 0, 0.5);
     }
 
+    .donate-content-div:hover{transition:'0.3s all ease-in';right:0}
+    * {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+    }
+    .content-titles {
+        max-height: 428px;
+        position: relative;
+        overflow: auto;
+    }
+    span#content-div-title {
+        color: red;
+    }
+    span#donate-content-div {
+        position: absolute;
+        left: -63px;
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg);
+        width: auto;
+        background: #ffc82c;
+        height: auto;
+        top: 21px;
+        padding: 7px 14px;
+        border-radius: 15px;
+        color: #123464;
+        font-family: initial;
+        font-size: 18px;
+    }
+    .donate-content-div {
+        border: 1px solid #0099d6;
+        padding: 20px;
+        background-color: #f0f0f0;
+        display: inline-block;
+        width: 304px;
+        right: -304px;
+        position: fixed;
+        top: 40%;
+        z-index: 9999;
+        transition: right .35s ease-in-out;
+    }
+
 </style>
 
 
@@ -309,13 +351,13 @@
     <div class="input-area">
         <textarea name="text" id="textarea"></textarea>
         <div class="button-area">
-            <select name="department" id="language" class="select_box">
+            <select name="language" id="language" class="select_box">
                 <option value= "0">语言选项（默认中英）</option>
                 <option value= "1">中文</option>
                 <option value= "2">英语</option>
                 <option value= "3">法语</option>
                 <option value= "4">德语</option>
-                <option value= "5">西班牙语</option>
+<!--                <option value= "5">西班牙语</option>-->
             </select>
             <button id="record-btn">录 音</button>
             <button id="send-btn">发 送</button>
@@ -323,6 +365,12 @@
     </div>
 </div>
 
+<div class="donate-content-div">
+    <strong style="font-weight: bold"> <span id="donate-content-div">捐献</span></strong>
+    <div class="content-titles" style="display: block;">
+        <div><img src="/docs/pic/goodjob.jpg" width="200" height="200" /></div>
+    </div>
+</div>
 
 </body>
 
@@ -364,7 +412,7 @@
 
     //====================webSocket连接======================
     // 创建一个webSocket连接
-    let socket = new WebSocket('wss://'+window.location.host+'/chat?uid='+getUid());
+    let socket = new WebSocket('ws://'+window.location.host+'/chat?uid='+getUid());
     let connected = false
 
     // 当webSocket连接成功的回调函数
@@ -456,6 +504,7 @@
         let audioBlob = [];
         recordBtn.addEventListener('click', () => {
             coreData.message_type = 2 //1text 2speech
+            coreData.language = $("#language option:selected").val()
             if (!isRecording) {
                 recordBtn.innerHTML="停止录音"
                 // 开始录制
