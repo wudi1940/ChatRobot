@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	gogpt "github.com/sashabaranov/go-gpt3"
 )
@@ -28,7 +27,7 @@ func InitOpenAIClient(key string) *openAIClientStruct {
 	return openAIClient
 }
 
-func (r *openAIClientStruct) AskAI(prompt string) string {
+func (r *openAIClientStruct) AskAI(prompt string) (string, error) {
 	c := gogpt.NewClient(r.Key)
 	ctx := context.Background()
 
@@ -44,8 +43,7 @@ func (r *openAIClientStruct) AskAI(prompt string) string {
 	}
 	resp, err := c.CreateCompletion(ctx, req)
 	if err != nil {
-		fmt.Println(err)
-		return ""
+		return "", err
 	}
-	return resp.Choices[0].Text
+	return resp.Choices[0].Text, nil
 }
