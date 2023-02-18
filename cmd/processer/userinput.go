@@ -30,6 +30,9 @@ func UserIutput(user *client.UserClient) {
 		}
 
 		logger.Debug(data)
+		if len(user.MsgContext) > config.MaxMsgContext {
+			user.MsgContext = user.MsgContext[len(user.MsgContext)-config.MaxMsgContext:]
+		}
 
 		switch data.MessageType {
 		case client.MessageType_Text:
@@ -53,13 +56,17 @@ func textInput(user *client.UserClient, msg *client.ChatMessage) {
 	respMsg.RespType = client.RespType_Err
 	logger.WithField("uid", user.Uid).WithField("msgId", msgId)
 
-	rpMsg, err := user.OpenAIClient.AskAI(msg.Message)
+	user.MsgContext = append(user.MsgContext, "HUMAN:"+msg.Message)
+
+	msgWithContext := GetWholeContext(user.MsgContext)
+	rpMsg, err := user.OpenAIClient.AskAI(msgWithContext)
 	if err != nil {
 		logger.WithError(err).Error("ai回复错误")
 		respMsg.Message = "ai回复错误"
 		user.RespChan <- respMsg
 		return
 	}
+	user.MsgContext = append(user.MsgContext, "AI:"+rpMsg)
 
 	filePath := config.ProjectPath + "/docs/audio/" + msgId + ".wav"
 	err = user.AzureClient.TextToSpeech(rpMsg, filePath, msg.LanguageSelection)
@@ -119,8 +126,11 @@ func speechInput(user *client.UserClient, msg *client.ChatMessage) {
 
 	logger.Info(respMsg)
 
+	user.MsgContext = append(user.MsgContext, "HUMAN:"+rpMsg)
+	msgWithContext := GetWholeContext(user.MsgContext)
+
 	// 询问ai并输出
-	aiMsg, err := user.OpenAIClient.AskAI(rpMsg)
+	aiMsg, err := user.OpenAIClient.AskAI(msgWithContext)
 	if err != nil {
 		logger.WithError(err).Error("ai回复错误")
 		respMsg.RespType = client.RespType_Err
@@ -128,6 +138,7 @@ func speechInput(user *client.UserClient, msg *client.ChatMessage) {
 		user.RespChan <- respMsg
 		return
 	}
+	user.MsgContext = append(user.MsgContext, "AI:"+aiMsg)
 
 	// ai语音合成：text转语音
 	var respAIMsg = &client.RespMessage{}
@@ -147,4 +158,14 @@ func speechInput(user *client.UserClient, msg *client.ChatMessage) {
 	respAIMsg.Message = aiMsg
 
 	user.RespChan <- respAIMsg
+}
+
+func GetWholeContext(msgContext []string) string {
+	res := strings.Builder{}
+
+	for _, str := range msgContext {
+		res.WriteString(str)
+	}
+
+	return res.String()
 }

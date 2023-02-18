@@ -44,6 +44,7 @@ func GetKeys(c *gin.Context) {
 	}
 	userClient.RespChan = make(chan *client.RespMessage, 3)
 	userClient.SendChan = make(chan *client.Message, 3)
+	userClient.MsgContext = make([]string, 0, config.MaxMsgContext+2)
 	// 如果用户列表中没有该用户
 	userClients.LoadOrStore(name, userClient)
 

@@ -9,6 +9,7 @@ type UserClient struct {
 	OpenAIClient *openAIClientStruct
 	SendChan     chan *Message
 	RespChan     chan *RespMessage
+	MsgContext   []string
 }
 
 type ChatMessage struct {
